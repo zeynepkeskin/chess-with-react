@@ -1,33 +1,50 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import Tile from '../Tile/Tile';
 import './Chessboard.css';
+import Referee from '../../referee/Referee';
 
 const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
 const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
+
+export const TeamType = [
+    0, //opponent
+    1  //our
+];
+
+export const PieceType = [
+    0, //pawn
+    1, //bishop
+    2, //knight
+    3, //rook
+    4, //queen
+    5  //king
+];
 
 const initialBoardState = [];
 
 
 for (let p = 0; p < 2; p++) {
-    const type = (p === 0) ? "d" : "l";
+    const teamType = (p === 0) ? TeamType[0] : TeamType[1];
+    const type = (teamType === TeamType[0]) ? "d" : "l";
     const y = (p === 0) ? 7 : 0;
 
-    initialBoardState.push({ image: `assets/images/r${type}.png`, x: 0, y });
-    initialBoardState.push({ image: `assets/images/r${type}.png`, x: 7, y });
-    initialBoardState.push({ image: `assets/images/h${type}.png`, x: 1, y });
-    initialBoardState.push({ image: `assets/images/h${type}.png`, x: 6, y });
-    initialBoardState.push({ image: `assets/images/b${type}.png`, x: 2, y });
-    initialBoardState.push({ image: `assets/images/b${type}.png`, x: 5, y });
-    initialBoardState.push({ image: `assets/images/q${type}.png`, x: 3, y });
-    initialBoardState.push({ image: `assets/images/k${type}.png`, x: 4, y });
+    initialBoardState.push({ image: `assets/images/r${type}.png`, x: 0, y, "type": PieceType[3], "team": teamType });
+    initialBoardState.push({ image: `assets/images/r${type}.png`, x: 7, y, "type": PieceType[3], "team": teamType });
+    initialBoardState.push({ image: `assets/images/h${type}.png`, x: 1, y, "type": PieceType[2], "team": teamType });
+    initialBoardState.push({ image: `assets/images/h${type}.png`, x: 6, y, "type": PieceType[2], "team": teamType });
+    initialBoardState.push({ image: `assets/images/b${type}.png`, x: 2, y, "type": PieceType[1], "team": teamType });
+    initialBoardState.push({ image: `assets/images/b${type}.png`, x: 5, y, "type": PieceType[1], "team": teamType });
+    initialBoardState.push({ image: `assets/images/q${type}.png`, x: 3, y, "type": PieceType[4], "team": teamType });
+    initialBoardState.push({ image: `assets/images/k${type}.png`, x: 4, y, "type": PieceType[5], "team": teamType });
 };
 
 for (let i = 0; i < 8; i++) {
-    initialBoardState.push({ image: "assets/images/pd.png", x: i, y: 6 });
+    initialBoardState.push({ image: "assets/images/pd.png", x: i, y: 6, type: PieceType[0], "team": TeamType[0] });
 }
 for (let i = 0; i < 8; i++) {
-    initialBoardState.push({ image: "assets/images/pl.png", x: i, y: 1 });
+    initialBoardState.push({ image: "assets/images/pl.png", x: i, y: 1, type: PieceType[0], "team": TeamType[1] });
 }
+
 
 export default function Chessboard() {
     const [activePiece, setActivePiece] = useState(null);
@@ -35,8 +52,8 @@ export default function Chessboard() {
     const [gridY, setGridY] = useState(0);
     const [pieces, setPieces] = useState(initialBoardState);
     const chessboardRef = useRef(null);
-
-  
+    const referee = new Referee();
+    
     
     function grabPiece(e) {
         const element = e.target;
@@ -105,11 +122,23 @@ export default function Chessboard() {
             const x = Math.floor((e.clientX - chessboard.offsetLeft) / 100);
             const y = Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - 800) / 100))
             
+
+            //updates the piece position
             setPieces((value) => {
+                
                 const pieces = value.map(p => {
                     if(p.x === gridX && p.y === gridY) {
-                        p.x = x;
-                        p.y = y;
+                        const validMove = referee.isValidMove(gridX, gridY, x, y, p.type, p.team);
+
+                        if(validMove) {      
+                            p.x = x;
+                            p.y = y;
+                        } else {
+                            activePiece.style.position = 'relative';
+                            activePiece.style.removeProperty('top');
+                            activePiece.style.removeProperty('left');
+                        };
+
                     }
                     return p;
                 })
