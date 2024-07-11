@@ -128,7 +128,7 @@ export default function Chessboard() {
                 
                 const pieces = value.map(p => {
                     if(p.x === gridX && p.y === gridY) {
-                        const validMove = referee.isValidMove(gridX, gridY, x, y, p.type, p.team);
+                        const validMove = referee.isValidMove(gridX, gridY, x, y, p.type, p.team, value);
 
                         if(validMove) {      
                             p.x = x;
