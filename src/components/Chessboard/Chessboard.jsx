@@ -118,35 +118,57 @@ export default function Chessboard() {
     
     function dropPiece(e) {
         const chessboard = chessboardRef.current;
-        if(activePiece && chessboard) {
+        if (activePiece && chessboard) {
             const x = Math.floor((e.clientX - chessboard.offsetLeft) / 100);
-            const y = Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - 800) / 100))
+            const y = Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - 800) / 100));
             
-
-            //updates the piece position
-            setPieces((value) => {
+            console.log("dropPiece triggered");
+            console.log("pieces:", pieces);
+            
+            if (Array.isArray(pieces)) {
+                const currentPiece = pieces.find(p => p.x === gridX && p.y === gridY);
+                const attackedPiece = pieces.find(p => p.x === x && p.y === y);
                 
-                const pieces = value.map(p => {
-                    if(p.x === gridX && p.y === gridY) {
-                        const validMove = referee.isValidMove(gridX, gridY, x, y, p.type, p.team, value);
+                console.log("currentPiece:", currentPiece);
+                console.log("attackedPiece:", attackedPiece);
+    
+                if (currentPiece) {
+                    const validMove = referee.isValidMove(gridX, gridY, x, y, currentPiece.type, currentPiece.team, pieces);
+                    console.log("validMove:", validMove);
+    
+                    if (validMove) {
+                        // UPDATES THE PIECE POSITION
+                        // AND IF A PIECE IS ATTACKED, REMOVES IT
 
-                        if(validMove) {      
-                            p.x = x;
-                            p.y = y;
-                        } else {
-                            activePiece.style.position = 'relative';
-                            activePiece.style.removeProperty('top');
-                            activePiece.style.removeProperty('left');
-                        };
+                        const updatedPieces = pieces.reduce((results, piece) => {
+                            if (piece.x === currentPiece.x && piece.y === currentPiece.y) {
+                                piece.x = x;
+                                piece.y = y;
+                                results.push(piece);
+                            } else if (!(piece.x === x && piece.y === y)) {
+                                results.push(piece);
+                            }
 
+                            return results;
+                        }, []);
+
+                        setPieces(updatedPieces);
+                    } else {
+                        // RESETS THE PIECE POSITION
+                        activePiece.style.position = 'relative';
+                        activePiece.style.removeProperty('top');
+                        activePiece.style.removeProperty('left');
                     }
-                    return p;
-                })
-                return pieces;
-            });
+                }
+            } else {
+                console.error("pieces is not an array or is undefined");
+            }
             setActivePiece(null);
         }
     }
+    
+    
+    
 
     let board = [];
 
